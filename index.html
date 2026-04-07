@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pakar Dinamis - Sistem Pakar Pendakian Sulsel</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
+        .form-group { margin-bottom: 20px; }
+        label.judul-kriteria { font-weight: bold; display: block; margin-bottom: 8px; color: #34495e; margin-top: 15px; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        .checkbox-group { background: #fff; border: 1px solid #bdc3c7; padding: 10px; border-radius: 5px; }
+        .checkbox-group label { display: block; margin-bottom: 5px; font-weight: normal; cursor: pointer; }
+        .section-title { background-color: #3498db; color: white; padding: 10px; border-radius: 5px; margin-top: 30px; margin-bottom: 15px; }
+        .btn-lanjut { background-color: #f39c12; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; }
+        .btn-simpan { background-color: #27ae60; color: white; border: none; padding: 12px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; font-weight: bold; margin-top: 20px; }
+        .note { font-size: 12px; color: #e74c3c; margin-top: -5px; margin-bottom: 10px; display: block; font-weight: bold; }
+        .info-teks { font-size: 13px; color: #7f8c8d; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Form Akuisisi Pengetahuan Pakar<br><small style="font-size: 16px; font-weight: normal;">Sistem Rekomendasi Pendakian Gunung di Sulsel</small></h2>
+
+    <form id="pakarForm">
+        <div class="section-title">Bagian 1: Identitas Pakar</div>
+        <div class="form-group">
+            <label class="judul-kriteria">Nama Lengkap:</label>
+            <input type="text" id="namaPakar" required>
+        </div>
+        <div class="form-group">
+            <label class="judul-kriteria">Sebutkan Gunung yang akan diatur aturannya:</label>
+            <span class="note">Pisahkan dengan tanda KOMA (,). Contoh: Gunung Bawakaraeng, Gunung Lompobattang</span>
+            <textarea id="gunungDidaki" rows="3" required></textarea>
+        </div>
+        <button type="button" id="btnProses" class="btn-lanjut" onclick="buatFormOtomatis()">Lanjut Buat Pertanyaan &raquo;</button>
+        <div id="wadahFormDinamis"></div>
+    </form>
+</div>
+
+<script>
+    // MASUKKAN URL APPS SCRIPT ANDA DI BAWAH INI (Di dalam tanda kutip)
+    const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzW-ytQbE7x-u_5C0hvuV1nFZfCJrK5lhNxphzh4ny6Mjlrm3pRuGRtYk4UlnRX937F/exec";
+
+    function buatFormOtomatis() {
+        let inputGunung = document.getElementById("gunungDidaki").value;
+        let wadah = document.getElementById("wadahFormDinamis");
+        if(inputGunung.trim() === "") return alert("Ketik nama gunung dulu!");
+
+        let daftarGunung = inputGunung.split(",");
+        let htmlForm = `<div class="section-title">Bagian 2: Penentuan Syarat Gunung</div>
+                        <p style="font-size: 14px; color: #e74c3c; font-weight: bold;">*Anda dapat memilih LEBIH DARI SATU pilihan pada setiap kriteria.</p>`;
+
+        for(let i = 0; i < daftarGunung.length; i++) {
+            let namaGunung = daftarGunung[i].trim();
+            if(namaGunung === "") continue; 
+
+            htmlForm += `
+            <div class="form-group blok-gunung" style="background: #ecf0f1; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                <h3 class="nama-gunung-teks" style="margin-top: 0; color: #2980b9;">${namaGunung}</h3>
+                <hr>
+                
+                <label class="judul-kriteria">1. Pengalaman Minimal yang diizinkan:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="val-pengalaman" value="Pemula"> Pemula <span class="info-teks">(1 - 3 kali mendaki)</span></label>
+                    <label><input type="checkbox" class="val-pengalaman" value="Menengah"> Menengah <span class="info-teks">(4 - 7 kali mendaki)</span></label>
+                    <label><input type="checkbox" class="val-pengalaman" value="Ahli"> Ahli <span class="info-teks">(> 7 kali mendaki)</span></label>
+                </div>
+
+                <label class="judul-kriteria">2. Kondisi Fisik yang diizinkan:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="val-fisik" value="Rendah"> Rendah</label>
+                    <label><input type="checkbox" class="val-fisik" value="Sedang"> Sedang</label>
+                    <label><input type="checkbox" class="val-fisik" value="Baik"> Baik</label>
+                </div>
+
+                <label class="judul-kriteria">3. Durasi Pendakian yang cocok:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="val-durasi" value="1 Hari (Tektok)"> 1 Hari (Tektok)</label>
+                    <label><input type="checkbox" class="val-durasi" value="2 Hari 1 Malam"> 2 Hari 1 Malam</label>
+                    <label><input type="checkbox" class="val-durasi" value="> 3 Hari"> > 3 Hari</label>
+                </div>
+
+                <label class="judul-kriteria">4. Ketinggian Gunung ini berada di kategori:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="val-tinggi" value="< 2.000 Mdpl"> < 2.000 Mdpl</label>
+                    <label><input type="checkbox" class="val-tinggi" value="2.000 - 3.000 Mdpl"> 2.000 - 3.000 Mdpl</label>
+                    <label><input type="checkbox" class="val-tinggi" value="> 3.000 Mdpl"> > 3.000 Mdpl</label>
+                </div>
+
+                <label class="judul-kriteria">5. Estimasi Budget yang dibutuhkan:</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="val-budget" value="Ekonomis"> Ekonomis <span class="info-teks">(< Rp 200.000)</span></label>
+                    <label><input type="checkbox" class="val-budget" value="Menengah"> Menengah <span class="info-teks">(Rp 200.000 - Rp 500.000)</span></label>
+                    <label><input type="checkbox" class="val-budget" value="Tinggi"> Tinggi <span class="info-teks">(> Rp 500.000)</span></label>
+                </div>
+            </div>`;
+        }
+        htmlForm += `<button type="submit" id="btnSimpanFinal" class="btn-simpan" onclick="simpanKeSheets(event)">Simpan ke Spreadsheet</button>`;
+        wadah.innerHTML = htmlForm;
+        document.getElementById("btnProses").style.display = "none";
+    }
+
+    // Fungsi kecil untuk mengambil semua nilai checkbox yang dicentang
+    function getCheckedValues(container, className) {
+        let checkboxes = container.querySelectorAll(className + ":checked");
+        let values = [];
+        checkboxes.forEach(cb => values.push(cb.value));
+        return values.join(", "); // Digabung dengan koma jika lebih dari satu
+    }
+
+    function simpanKeSheets(event) {
+        event.preventDefault(); 
+        
+        let namaPakar = document.getElementById("namaPakar").value;
+        if(namaPakar === "") return alert("Nama Pakar belum diisi!");
+
+        let tombol = document.getElementById("btnSimpanFinal");
+        tombol.innerHTML = "Menyimpan ke Spreadsheet, mohon tunggu...";
+        tombol.style.backgroundColor = "#95a5a6";
+        tombol.disabled = true;
+
+        let dataKirim = [];
+        let semuaBlok = document.querySelectorAll(".blok-gunung");
+
+        // Mengambil data menggunakan fungsi getCheckedValues()
+        semuaBlok.forEach(blok => {
+            dataKirim.push({
+                namaPakar: namaPakar,
+                gunung: blok.querySelector(".nama-gunung-teks").innerText,
+                pengalaman: getCheckedValues(blok, ".val-pengalaman"),
+                fisik: getCheckedValues(blok, ".val-fisik"),
+                durasi: getCheckedValues(blok, ".val-durasi"),
+                ketinggian: getCheckedValues(blok, ".val-tinggi"),
+                budget: getCheckedValues(blok, ".val-budget")
+            });
+        });
+
+        // Mengirim data ke Google Apps Script
+        fetch(URL_GOOGLE_SHEETS, {
+            method: "POST",
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataKirim)
+        }).then(() => {
+            alert("Mantap! Data Rule Base dari pakar telah sukses tersimpan di Google Sheets.");
+            window.location.reload();
+        }).catch(err => {
+            alert("Gagal mengirim data. Pastikan URL Google Sheets sudah benar.");
+            tombol.innerHTML = "Coba Simpan Lagi";
+            tombol.style.backgroundColor = "#27ae60";
+            tombol.disabled = false;
+        });
+    }
+</script>
+
+</body>
+</html>
