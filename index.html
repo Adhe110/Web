@@ -79,9 +79,9 @@
 
                 <label class="judul-kriteria">3. Durasi Pendakian yang cocok:</label>
                 <div class="checkbox-group">
-                    <label><input type="checkbox" class="val-durasi" value="1 Hari (Tektok)"> 1 Hari (Tektok)</label>
-                    <label><input type="checkbox" class="val-durasi" value="2 Hari 1 Malam"> 2 Hari 1 Malam</label>
-                    <label><input type="checkbox" class="val-durasi" value="> 3 Hari"> > 3 Hari</label>
+                    <label><input type="checkbox" class="val-durasi" value="< 3 Jam"> < 3 Jam</label>
+                    <label><input type="checkbox" class="val-durasi" value="<= 6 Jam"> <= 6 Jam</label>
+                    <label><input type="checkbox" class="val-durasi" value="> 6 Jam"> > 6 Jam</label>
                 </div>
 
                 <label class="judul-kriteria">4. Ketinggian Gunung ini berada di kategori:</label>
@@ -104,12 +104,11 @@
         document.getElementById("btnProses").style.display = "none";
     }
 
-    // Fungsi kecil untuk mengambil semua nilai checkbox yang dicentang
     function getCheckedValues(container, className) {
         let checkboxes = container.querySelectorAll(className + ":checked");
         let values = [];
         checkboxes.forEach(cb => values.push(cb.value));
-        return values.join(", "); // Digabung dengan koma jika lebih dari satu
+        return values.join(", "); 
     }
 
     function simpanKeSheets(event) {
@@ -126,7 +125,6 @@
         let dataKirim = [];
         let semuaBlok = document.querySelectorAll(".blok-gunung");
 
-        // Mengambil data menggunakan fungsi getCheckedValues()
         semuaBlok.forEach(blok => {
             dataKirim.push({
                 namaPakar: namaPakar,
@@ -139,7 +137,6 @@
             });
         });
 
-        // Mengirim data ke Google Apps Script
         fetch(URL_GOOGLE_SHEETS, {
             method: "POST",
             mode: "no-cors", 
